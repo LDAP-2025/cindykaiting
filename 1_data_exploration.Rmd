@@ -1,0 +1,21 @@
+---
+title: "1_data_exploration"
+author: "Kaiting"
+date: "2025-06-09"
+output: html_document
+---
+
+```{r}
+library(tidyverse)
+library(ggplot2)
+library(foreign)
+
+```
+
+
+```{r}
+dat_wave1 <- read.spss("UKDA-8658-spss/spss/spss28/covid-19_wave1_survey_cls.sav", to.data.frame = TRUE)
+dat_wave2 <- read.spss("UKDA-8658-spss/spss/spss28/covid-19_wave2_survey_cls.sav", to.data.frame = TRUE)
+dat_wave3 <- read.spss("UKDA-8658-spss/spss/spss28/covid-19_wave3_survey_cls.sav", to.data.frame = TRUE)
+```
+
