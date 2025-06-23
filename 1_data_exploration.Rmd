@@ -9,13 +9,338 @@ output: html_document
 library(tidyverse)
 library(ggplot2)
 library(foreign)
+library(dplyr)
+library(tidyr)
+library(naniar)
+library(psych)
+```
+
+Read data from 3 waves
+
+```{r}
+#read data
+dat_wave1 <- read.spss("UKDA-8658-spss/spss/spss28/covid-19_wave1_survey_cls.sav", to.data.frame = TRUE)
+dat_wave2 <- read.spss("UKDA-8658-spss/spss/spss28/covid-19_wave2_survey_cls.sav", to.data.frame = TRUE)
+dat_wave3 <- read.spss("UKDA-8658-spss/spss/spss28/covid-19_wave3_survey_cls.sav", to.data.frame = TRUE)
+```
+
+Data cleaning
+
+```{r}
+#putting all ID number together -- decided not to use all of the cohort but only focus on NS cohort
+#dat_wave1 <- dat_wave1 %>%
+#  mutate(NCDSID = na_if(trimws(NCDSID), ""))
+#dat_wave1 <- dat_wave1 %>%
+#  mutate(BCSID = na_if(trimws(BCSID), ""))
+#dat_wave1 <- dat_wave1 %>%
+#  mutate(NSID = na_if(trimws(NSID), ""))
+#dat_wave1 <- dat_wave1 %>%
+#  mutate(MCSID = na_if(trimws(MCSID), ""))
+#dat_wave1 <- dat_wave1 %>%
+#  mutate(ID = coalesce(NCDSID, BCSID, NSID, MCSID))
+
+#dat_wave2 <- dat_wave2 %>%
+#  mutate(NCDSID = na_if(trimws(NCDSID), ""))
+#dat_wave2 <- dat_wave2 %>%
+#  mutate(BCSID = na_if(trimws(BCSID), ""))
+#dat_wave2 <- dat_wave2 %>%
+#  mutate(NSID = na_if(trimws(NSID), ""))
+#dat_wave2 <- dat_wave2 %>%
+#  mutate(MCSID = na_if(trimws(MCSID), ""))
+#dat_wave2 <- dat_wave2 %>%
+#  mutate(ID = coalesce(NCDSID, BCSID, NSID, MCSID))
+
+#dat_wave3 <- dat_wave3 %>%
+#  mutate(NCDSID = na_if(trimws(NCDSID), ""))
+#dat_wave3 <- dat_wave3 %>%
+#  mutate(BCSID = na_if(trimws(BCSID), ""))
+#dat_wave3 <- dat_wave3 %>%
+#  mutate(NSID = na_if(trimws(NSID), ""))
+#dat_wave3 <- dat_wave3 %>%
+#  mutate(MCSID = na_if(trimws(MCSID), ""))
+#dat_wave3 <- dat_wave3 %>%
+#  mutate(ID = coalesce(NCDSID, BCSID, NSID, MCSID))
+
+#only include NS participants with cohabiting partner
+tar_wave1 <- dat_wave1 %>%
+  filter(str_trim(NSID) != "" & CW1_HHNUMWH_1 == "Yes")
+
+tar_wave2 <- dat_wave2 %>%
+  filter(str_trim(NSID) != "" & CW2_HHNUMWH_1 == "Yes")
+
+tar_wave3 <- dat_wave3 %>%
+  filter(str_trim(NSID) != "" & CW3_HHNUMWH_1 == "Yes")
+
+#calculate room-people ratio
+tar_wave1$CW1_NUMROOMS <- as.numeric(tar_wave1$CW1_NUMROOMS)
+tar_wave1$CW1_HHNUM <- as.numeric(tar_wave1$CW1_HHNUM)
+tar_wave1 <- tar_wave1 %>%
+  mutate(CW1_PRRATIO = CW1_HHNUM/CW1_NUMROOMS) #denominator cannot be 0 so number of rooms will be the denominator, as there are 0 in CW1_HHNUM
+
+tar_wave2$CW2_NUMROOMS <- as.numeric(tar_wave2$CW2_NUMROOMS)
+tar_wave2$CW2_HHNUM <- as.numeric(tar_wave2$CW2_HHNUM)
+tar_wave2 <- tar_wave2 %>%
+  mutate(CW2_PRRATIO = CW2_HHNUM/CW2_NUMROOMS)
+
+tar_wave3$CW3_NUMROOMS <- as.numeric(tar_wave3$CW3_NUMROOMS)
+tar_wave3$CW3_HHNUM <- as.numeric(tar_wave3$CW3_HHNUM)
+tar_wave3 <- tar_wave3 %>%
+  mutate(CW3_PRRATIO = CW3_HHNUM/CW3_NUMROOMS)
+
+
+#merge data
+all_dat <- bind_rows(tar_wave1, tar_wave2, tar_wave3)
+all_dat <- all_dat %>%
+  arrange(NSID)
+
+#selected variables
+clean_dat <- all_dat %>%
+  select(NSID, 
+         CW1_FINANCIALMAND, CW1_CURPREG, CW1_PRRATIO, CW1_SOCPROV_1, CW1_SOCPROV_2, CW1_SOCPROV_3, CW1_PATIENT, CW1_RELSAT,
+         CW2_FINANCIALMAND, CW2_CURPREG, CW2_PRRATIO, CW2_SOCPROV_1, CW2_SOCPROV_2, CW2_SOCPROV_3, CW2_PATIENT, CW2_RELSAT, 
+         CW3_FINANCIALMAND, CW3_CURPREG, CW3_PRRATIO, CW3_SOCPROV_1, CW3_SOCPROV_2, CW3_SOCPROV_3, CW3_PATIENT, CW3_RELSAT)
+
+#changing data into wide format
+wide_dat <- clean_dat %>%
+  group_by(NSID) %>%
+  summarise(across(everything(), ~ first(na.omit(.)), .names = "{.col}"), .groups = "drop")
+
+#Re-code data into numeric format
+##record the labels and its corresponding numbers and to compare with the one after re-code, in case there are data missing because of this process
+tab_before <- lapply(
+  c("CW1_FINANCIALMAND", "CW1_CURPREG", "CW1_SOCPROV_1", "CW1_SOCPROV_2", "CW1_SOCPROV_3", "CW1_PATIENT", "CW1_RELSAT",
+    "CW2_FINANCIALMAND", "CW2_CURPREG", "CW2_SOCPROV_1", "CW2_SOCPROV_2", "CW2_SOCPROV_3", "CW2_PATIENT", "CW2_RELSAT", 
+    "CW3_FINANCIALMAND", "CW3_CURPREG", "CW3_SOCPROV_1", "CW3_SOCPROV_2", "CW3_SOCPROV_3", "CW3_PATIENT", "CW3_RELSAT"),
+  \(var) table(wide_dat[[var]], useNA = "ifany")
+)
+##FINANCIALMAND
+wide_dat <- wide_dat %>%
+  mutate(across(
+    c(CW1_FINANCIALMAND, CW2_FINANCIALMAND, CW3_FINANCIALMAND),
+    ~ recode(.,
+             "No information" = -8,
+             "Not applicable" = -1,
+             "I’m much worse off" = 1,
+             "I’m a little worse off" = 2,
+             "I’m about the same" = 3,
+             "I’m a little better off" = 4,
+             "I’m much better off" = 5,
+             "I'm much worse off" = 1,
+             "I'm a little worse off" = 2,
+             "I'm about the same" = 3,
+             "I'm a little better off" = 4,
+             "I'm much better off" = 5
+             )
+    ))
+##CURPREG
+wide_dat <- wide_dat %>%
+  mutate(across(
+    c(CW1_CURPREG, CW2_CURPREG, CW3_CURPREG),
+    ~ recode(.,
+             "No information" = -8,
+             "Not applicable" = -1,
+             "Yes" = 1,
+             "No" = 2
+             )
+    ))
+##SOCPROV_1-2
+wide_dat <- wide_dat %>%
+  mutate(across(
+    c(CW1_SOCPROV_1, CW1_SOCPROV_2, CW2_SOCPROV_1, CW2_SOCPROV_2, CW3_SOCPROV_1, CW3_SOCPROV_2),
+    ~ recode(.,
+             "No information" = -8,
+             "Not applicable" = -1,
+             "Very true" = 1,
+             "Partly true" = 2,
+             "Not true at all" = 3
+             )
+    ))
+##SOCPROV_3 (Reversed)
+wide_dat <- wide_dat %>%
+  mutate(across(
+    c(CW1_SOCPROV_3, CW2_SOCPROV_3, CW3_SOCPROV_3),
+    ~ recode(.,
+    "No information" = -8,
+    "Not applicable" = -1,
+    "Very true" = 3,
+    "Partly true" = 2,
+    "Not true at all" = 1
+    ),
+    .names = "{.col}_R"
+  ))
+wide_dat <- wide_dat %>%
+  select(-c(CW1_SOCPROV_3, CW2_SOCPROV_3, CW3_SOCPROV_3))
+##PATIENT
+wide_dat <- wide_dat %>%
+  mutate(across(
+    c(CW1_PATIENT, CW2_PATIENT, CW3_PATIENT),
+    ~ recode(.,
+             "No information" = -8,
+             "Not applicable" = -1,
+             "Never\n0" = 1,
+             "0: Never" = 1,
+             "0" = 1,
+             "1" = 2,
+             "2" = 3,
+             "3" = 4,
+             "4" = 5,
+             "5" = 6,
+             "6" = 7,
+             "7" = 8,
+             "8" = 9,
+             "9" = 10,
+             "10" = 11,
+             "Always\n10 " = 11,
+             "10: Always" = 11
+             )
+    ))
+##RELSAT
+wide_dat <- wide_dat %>%
+  mutate(across(
+    c(CW1_RELSAT, CW2_RELSAT, CW3_RELSAT),
+    ~ recode(.,
+             "No information" = -8,
+             "Not applicable" = -1,
+             "Very Unhappy" = 1,
+             "1: Very unhappy" = 1,
+             "1" = 1,
+             "2" = 2,
+             "3" = 3,
+             "4" = 4,
+             "5" = 5,
+             "6" = 6,
+             "7" = 7,
+             "Very Happy" = 7,
+             "7: Very happy" = 7
+             )
+    ))
+##record another time after re-coding the variables
+tab_after <- lapply(
+  c("CW1_FINANCIALMAND", "CW1_CURPREG", "CW1_SOCPROV_1", "CW1_SOCPROV_2", "CW1_SOCPROV_3_R", "CW1_PATIENT", "CW1_RELSAT",
+    "CW2_FINANCIALMAND", "CW2_CURPREG", "CW2_SOCPROV_1", "CW2_SOCPROV_2", "CW2_SOCPROV_3_R", "CW2_PATIENT", "CW2_RELSAT", 
+    "CW3_FINANCIALMAND", "CW3_CURPREG", "CW3_SOCPROV_1", "CW3_SOCPROV_2", "CW3_SOCPROV_3_R", "CW3_PATIENT", "CW3_RELSAT"),
+  \(var) table(wide_dat[[var]], useNA = "ifany")
+)
+names(tab_before) <- names(tab_after) <- c("CW1_FINANCIALMAND", "CW1_CURPREG", "CW1_SOCPROV_1", "CW1_SOCPROV_2", "CW1_SOCPROV_3", "CW1_PATIENT", "CW1_RELSAT",
+                                           "CW2_FINANCIALMAND", "CW2_CURPREG", "CW2_SOCPROV_1", "CW2_SOCPROV_2", "CW2_SOCPROV_3", "CW2_PATIENT", "CW2_RELSAT", 
+                                           "CW3_FINANCIALMAND", "CW3_CURPREG", "CW3_SOCPROV_1", "CW3_SOCPROV_2", "CW3_SOCPROV_3", "CW3_PATIENT", "CW3_RELSAT")
+tab_before
+tab_after #checked, all numbers and NA matched
+
 
 ```
 
 
+Data exploration before fitting model
+(ask what is the standard procedure when exploring longitudinal data?)
+
 ```{r}
-dat_wave1 <- read.spss("UKDA-8658-spss/spss/spss28/covid-19_wave1_survey_cls.sav", to.data.frame = TRUE)
-dat_wave2 <- read.spss("UKDA-8658-spss/spss/spss28/covid-19_wave2_survey_cls.sav", to.data.frame = TRUE)
-dat_wave3 <- read.spss("UKDA-8658-spss/spss/spss28/covid-19_wave3_survey_cls.sav", to.data.frame = TRUE)
+#reshape into long format for data exploration
+long_dat <- wide_dat %>%
+  pivot_longer(
+    cols = c(CW1_FINANCIALMAND, CW1_CURPREG, CW1_PRRATIO, CW1_SOCPROV_1, CW1_SOCPROV_2, CW1_SOCPROV_3_R, CW1_PATIENT, CW1_RELSAT,
+             CW2_FINANCIALMAND, CW2_CURPREG, CW2_PRRATIO, CW2_SOCPROV_1, CW2_SOCPROV_2, CW2_SOCPROV_3_R, CW2_PATIENT, CW2_RELSAT, 
+             CW3_FINANCIALMAND, CW3_CURPREG, CW3_PRRATIO, CW3_SOCPROV_1, CW3_SOCPROV_2, CW3_SOCPROV_3_R, CW3_PATIENT, CW3_RELSAT),
+    names_to = c("wave", ".value"),
+    names_pattern = "CW(\\d+)_(.*)"
+  ) %>%
+  mutate(wave = as.integer(wave)) 
+
+#check missing data
+##visualisation of missing data in each variable
+gg_miss_var(long_dat, facet = wave)
+miss_var_summary(wide_dat) 
+##comparison of missing data in each wave
+long_dat %>%
+  group_by(wave) %>%
+  summarise(across(where(is.numeric), ~sum(is.na(.)), .names = "{.col}"))
+
+#summary
+long_dat %>% 
+  group_by(wave) %>% 
+  summarise(
+    financial_mean = mean(FINANCIALMAND, na.rm = TRUE), 
+    financial_sd = sd(FINANCIALMAND, na.rm = TRUE),
+    preg_mean = mean(CURPREG, na.rm = TRUE), 
+    preg_sd = sd(CURPREG, na.rm = TRUE), 
+    pr_mean = mean(PRRATIO, na.rm = TRUE),
+    pr_sd = sd(PRRATIO, na.rm = TRUE), 
+    soc1_mean = mean(SOCPROV_1, na.rm = TRUE), 
+    soc1_sd = sd(SOCPROV_1, na.rm = TRUE), 
+    soc2_mean = mean(SOCPROV_2, na.rm = TRUE), 
+    soc2_sd = sd(SOCPROV_2, na.rm = TRUE),
+    soc3_mean = mean(SOCPROV_3_R, na.rm = TRUE),
+    soc3_sd = sd(SOCPROV_3_R, na.rm = TRUE),
+    pat_mean = mean(PATIENT, na.rm = TRUE), 
+    pat_sd = sd(PATIENT, na.rm = TRUE),
+    rels_mean = mean(RELSAT, na.rm = TRUE), 
+    rels_sd = sd(RELSAT, na.rm = TRUE)
+    )
+
+#check variable distribution at each time point
+##Financial stress
+ggplot(long_dat, aes(x = FINANCIALMAND)) + 
+  geom_histogram() +
+  facet_wrap(~wave) +
+  theme_minimal()
+##Pregnancy
+ggplot(long_dat, aes(x = CURPREG)) + 
+  geom_histogram() +
+  facet_wrap(~wave) +
+  theme_minimal()
+##People room ratio
+ggplot(long_dat, aes(x = PRRATIO)) + 
+  geom_histogram() +
+  facet_wrap(~wave) +
+  theme_minimal()
+##Social support 1
+ggplot(long_dat, aes(x = SOCPROV_1)) + 
+  geom_histogram() +
+  facet_wrap(~wave) +
+  theme_minimal()
+##Social support 2
+ggplot(long_dat, aes(x = SOCPROV_2)) + 
+  geom_histogram() +
+  facet_wrap(~wave) +
+  theme_minimal()
+##Social support 3
+ggplot(long_dat, aes(x = SOCPROV_3_R)) + 
+  geom_histogram() +
+  facet_wrap(~wave) +
+  theme_minimal()
+##Patient
+ggplot(long_dat, aes(x = PATIENT)) + 
+  geom_histogram() +
+  facet_wrap(~wave) +
+  theme_minimal()
+##Relationship satisfaction
+ggplot(long_dat, aes(x = RELSAT)) + 
+  geom_histogram() +
+  facet_wrap(~wave) +
+  theme_minimal()
+
+#Cannot visualise anything related to the protected factor as it is a latent factor in the model. To simply explore it a bit, take the mean of social support
+long_dat <- long_dat %>%
+  mutate(
+    SOCPROV_total = rowMeans(select(., c(SOCPROV_1, SOCPROV_2, SOCPROV_3_R)),
+  ))
+
+#correlation
+long_dat %>%
+  select(FINANCIALMAND, CURPREG, PRRATIO, SOCPROV_total, PATIENT, RELSAT) %>%
+  cor(use = "pairwise.complete.obs")
+
+vars <- long_dat %>%
+  select(FINANCIALMAND, CURPREG, PRRATIO, SOCPROV_total, PATIENT, RELSAT)
+pairs.panels(vars)
+
+#changes of each variables overtime
+long_dat %>%
+  group_by(wave) %>%
+  summarise(across(c(FINANCIALMAND, CURPREG, PRRATIO, SOCPROV_total, PATIENT, RELSAT), mean, na.rm = TRUE)) %>%
+  pivot_longer(-wave, names_to = "variable", values_to = "mean") %>%
+  ggplot(aes(x = wave, y = mean, color = variable)) +
+  geom_line() + geom_point() + theme_minimal()
+
 ```
 
