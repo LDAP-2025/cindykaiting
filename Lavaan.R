@@ -38,7 +38,7 @@ semPaths(fit1,
          rotation = 4,
          reorder = FALSE,
          color = list(man = "white"),
-         fade= FALSE,
+         fade= TRUE,
          residuals = TRUE,        
          title = FALSE) 
 
@@ -65,6 +65,8 @@ model2 <- '
 fit2 <- sem(model2, data = wide_dat, missing = "ML", meanstructure = TRUE) 
 # Missing values, some pairwise combinations have less than 10% coverage: 
 lavInspect(fit2, "coverage") 
+# Check on the number of demographics and variables we have, what is the population of people that are missing data. 
+# Multiple imputations (future). 
 
 library(naniar)
 vis_miss(wide_dat[, c("CW1_PRRATIO", "CW2_PRRATIO", "CW3_PRRATIO",
@@ -163,6 +165,10 @@ model11 <- '
   CW2_SUPPORT ~~ CW2_RELSAT
   CW3_SUPPORT ~~ CW3_RELSAT
 ' 
+
+# **** Redo with constraining the coefficients to be the same, AR, CL, compare them. 
+# anova(model1,mosdel2)
+
 fit11 <- sem(model11, data = wide_dat, missing = "ML", meanstructure = TRUE) 
 summary(fit11, standardized = TRUE, fit.measures = TRUE) 
 semPlot::semPaths(fit11) 
@@ -368,7 +374,3 @@ model33 <- '
 '
 fit33 <- sem(model33, data = wide_dat, missing = "ML", meanstructure = TRUE)
 summary(fit33, standardized = TRUE, fit.measures = TRUE) 
-
-
-## QUESTION: 
-Should we do contemporaneous effects of mediation as well? Not just lagged? Lagged indirect VS immediate indirect effect. 
