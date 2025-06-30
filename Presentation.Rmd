@@ -46,8 +46,11 @@ Wave 3: February/March 2021 -- during the third UK lockdown
 How did stress influence relationship satisfaction in cohabitating couples during the pandemic? 
 
 H1: Stress (financial, pregnancy status, and household ratio) during the pandemic predicts a decline in relationship satisfaction. 
+
 H2: Social support mediates the relationship between stress and relationship satisfaction. 
-H3: Relationship satisfaction predicts separation/ divorce. * We initially wanted to include divorce outcomes but there was no data collected, so we will relate our findings to divorce outcomes reported externally. 
+
+H3: Relationship satisfaction predicts separation/ divorce. 
+* We initially wanted to include divorce outcomes but there was no data collected, so we will relate our findings to divorce outcomes reported externally. 
 
 # Data cleaning process
 
@@ -426,10 +429,10 @@ wide_dat %>%
   rplot()
 ```
 
-# Fit model
+# Fit model 
 
 ```{r, s1_mdl1}
-#Simple CLPM suggesting there might be causal relationship between financial stress and later relationship satisfaction
+#Simple CLPM testing the model that there might be a causal relationship between financial stress and later relationship satisfaction. 
 
 model1 <- '
   # autoregressive paths
@@ -450,13 +453,14 @@ model1 <- '
   CW3_FINANCIALMAND ~~ CW3_RELSAT
 ' 
 
+# Fit test using lavvan: 
 fit1 <- sem(model1, data = wide_dat, missing = "ML", meanstructure = TRUE) 
 summary(fit1, standardized = TRUE, fit.measures = TRUE) 
-# Fit is okay.. CFI good fit but RMSEA is poor fit. 
-# Significant autoregressive paths for both financial stress and relationship satisfaction 
-# Non-significant cross-lagged paths. 
-# Covariances: Consistently correlated with each other within each wave, but do not influence each other longitudinally. 
 
+# Model fit: We can see that the fit is okay.. CFI and SRMR are good indicate good/ acceptable fit, but RMSEA and TLI suggest poor fit. Chi square test is statistically significant. 
+# Autoregressive paths: There are strong and significant autoregressive paths for both financial stress and relationship satisfaction, stability over time. 
+# Cross-lagged paths: All the cross-lagged paths are non-significant, so in this simple model, financial stress does not predict relationship satisfaction or vice versa. Warrants more exploration of other models and explanations. 
+# Covariances- Financial stress and relationship satisfaction are consistently correlated with each other within each wave, but do not influence each other causally longitudinally. 
 
 #model visualisation
 layout_mat <- matrix(NA, nrow=2, ncol=3)
@@ -477,11 +481,26 @@ plt1 <- semPaths(fit1,
          residuals = FALSE,
          intercepts = FALSE,
          edge.label.cex = 1.2,
-         nCharNodes = 0
-         )
+         nCharNodes = 0, 
+         fade= TRUE
+         ) 
+
+semPaths(fit1,
+         what = "std",  
+         layout = "tree2",
+         rotation = 2,
+         reorder = FALSE,
+         color = list(man = "white"),
+         fade= TRUE,
+         residuals = FALSE,  
+         intercepts= FALSE,
+         title = FALSE) 
+
+
 
 ```
 
+## 
 ## Models that include social support as a mediator
 
 ```{r, c1_mdl1}
