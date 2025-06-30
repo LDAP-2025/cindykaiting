@@ -1,4 +1,5 @@
 ---
+title: "Love Under Lockdown: An investigation into relationship satisfaction in cohabitating couples during the Covid-19 pandemic" 
 author: "Cindy and Kaiting"
 date: "2025-06-24"
 output: html_document
@@ -25,12 +26,15 @@ dat_wave1 <- read.spss("UKDA-8658-spss/spss/spss28/covid-19_wave1_survey_cls.sav
 dat_wave2 <- read.spss("UKDA-8658-spss/spss/spss28/covid-19_wave2_survey_cls.sav", to.data.frame = TRUE)
 dat_wave3 <- read.spss("UKDA-8658-spss/spss/spss28/covid-19_wave3_survey_cls.sav", to.data.frame = TRUE)
 ```
+# Introduction:  
 
-# Introduction -- introduction of the database and our research question?
+The Covid-19 pandemic has changed our interpersonal relationships and the way we connect with each other. With the onset of Covid-19,  much of the world implemented strict social distancing and stay-at-home lockdown orders. This significantly increased the amount of time many couples spent together at home. We were interested in how various stressors exacerbated by the pandemic (financial, housing ratio, and pregnancy) influenced relationship satisfaction over the course of the lockdown. We also wanted to see whether this relationship was mediated by the provision of social support perceived by individuals. This research has important implications for understanding the effects of the pandemic on romantic relationships. 
 
 ## Database
 
-**Waves:**
+**Waves:** 
+
+The study uses data collected by the Center for Longitudinal Studies and MRC Unit for Lifelong Health and Ageing. They carried out 3 surveys of the participants of 5 national longitudinal cohort studies which collect insights into the lives of study participants on various factors. 
 
 Wave 1: May 2020 -- at the height of lockdown restrictions
 
@@ -38,7 +42,12 @@ Wave 2: September/October 2020 -- period between the easing of restrictions
 
 Wave 3: February/March 2021 -- during the third UK lockdown
 
-## Research questions
+## Research questions 
+How did stress influence relationship satisfaction in cohabitating couples during the pandemic? 
+
+H1: Stress (financial, pregnancy status, and household ratio) during the pandemic predicts a decline in relationship satisfaction. 
+H2: Social support mediates the relationship between stress and relationship satisfaction. 
+H3: Relationship satisfaction predicts separation/ divorce. * We initially wanted to include divorce outcomes but there was no data collected, so we will relate our findings to divorce outcomes reported externally. 
 
 # Data cleaning process
 
@@ -199,7 +208,11 @@ tab_after
 
 [Protective factor:]{.underline} social support.
 
-[Outcome variable:]{.underline} relationship satisfaction.
+[Outcome variable:]{.underline} relationship satisfaction. 
+
+We chose the stressor variables based on prior research associating these stressors to relationship strain. Furthermore, these were all factors that are highly significant during Covid-19 (ie financial stress increased since many people lost their jobs, pregnancy status due to uncertainty and concerns about healthcare, and household ratio since people were spending more time at home and less personal space would likely cause more relationship conflict). 
+
+The social support variable was selected, it is a latent factor composed of 3 questions, measuring how perceived support from others. This is based on prior literature highlighting the importance of social support during lockdown. 
 
 Example code:
 
