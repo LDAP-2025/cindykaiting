@@ -429,7 +429,7 @@ wide_dat %>%
   rplot()
 ```
 
-# Fit model 
+# Fit model (simple): 
 
 ```{r, s1_mdl1}
 #Simple CLPM testing the model that there might be a causal relationship between financial stress and later relationship satisfaction. 
@@ -500,11 +500,105 @@ semPaths(fit1,
 
 ```
 
-## 
-## Models that include social support as a mediator
+## Housing ratio and relationship satisfaction 
+```{r, s1_mdl1}
+model2 <- '
+  # autoregressive paths 
+  CW2_PRRATIO ~ a1*CW1_PRRATIO
+  CW3_PRRATIO ~ a2*CW2_PRRATIO
+  CW2_RELSAT ~ b1*CW1_RELSAT
+  CW3_RELSAT ~ b2*CW2_RELSAT
+
+  # cross-lagged paths
+  CW2_RELSAT ~ c1*CW1_PRRATIO
+  CW3_RELSAT ~ c2*CW2_PRRATIO
+  CW2_PRRATIO ~ d1*CW1_RELSAT
+  CW3_PRRATIO ~ d2*CW2_RELSAT
+
+  # covariances
+  CW1_PRRATIO ~~ CW1_RELSAT
+  CW2_PRRATIO ~~ CW2_RELSAT
+  CW3_PRRATIO ~~ CW3_RELSAT 
+  ' 
+
+fit2 <- sem(model2, data = wide_dat, missing = "ML", meanstructure = TRUE) 
+
+# A lot of missing data, future direction is multiple imputations.. 
+
+lavInspect(fit2, "coverage") 
+
+library(naniar)
+vis_miss(wide_dat[, c("CW1_PRRATIO", "CW2_PRRATIO", "CW3_PRRATIO",
+                      "CW1_RELSAT", "CW2_RELSAT", "CW3_RELSAT")]) 
+
+summary(fit2, standardized = TRUE, fit.measures = TRUE) 
+
+# Model fit is okay, but lots of missing data. CFI >0.9, RMSEA 0.082 (moderate fit), chi square (poor exact fit). 
+# Autoregressive paths: Significant and stable over time. 
+# CL paths:  Ratio -> Relsat small but significant negative effect at W1 to W2, stronger W2 to W3. Higher ratio predicts lower future relationship satisfaction, this strengthens over time. Relsat -> Ratio W1 to W2 is strong and significant, this does not really make sense. 
+# Covariances: Significantly negatively correlated at T1, positively correlated T2, and not significant T3. 
+
+semPaths(fit2,
+         what = "std",  
+         layout = "tree2",
+         rotation = 1,
+         reorder = FALSE,
+         color = list(man = "white"),
+         fade= TRUE,
+         residuals = FALSE,   
+         intercepts= FALSE,
+         title = FALSE) 
+
+```
+
+## Pregnancy status and relationship satisfaction 
+```{r, s1_mdl1}
+model3 <- '
+  # Autoregressive paths
+  CW2_CURPREG ~ a1*CW1_CURPREG
+  CW3_CURPREG ~ a2*CW2_CURPREG
+  CW2_RELSAT ~ b1*CW1_RELSAT
+  CW3_RELSAT ~ b2*CW2_RELSAT
+
+  # Cross-lagged paths
+  CW2_RELSAT ~ c1*CW1_CURPREG
+  CW3_RELSAT ~ c2*CW2_CURPREG
+  CW2_CURPREG ~ d1*CW1_RELSAT
+  CW3_CURPREG ~ d2*CW2_RELSAT
+
+  # Covariances
+  CW1_CURPREG ~~ CW1_RELSAT
+  CW2_CURPREG ~~ CW2_RELSAT
+  CW3_CURPREG ~~ CW3_RELSAT
+' 
+
+fit3 <- sem(model3, data = wide_dat, missing = "ML", meanstructure = TRUE) 
+summary(fit3, standardized = TRUE, fit.measures = TRUE) 
+
+semPaths(fit3,
+         what = "std",  
+         layout = "tree2",
+         rotation = 4,
+         reorder = FALSE,
+         color = list(man = "white"),
+         fade= TRUE,
+         residuals = FALSE,   
+         intercepts= FALSE, 
+         title = FALSE) 
+
+
+# Autoregressive: Both pregnancy status and relationship satisfaction are stable across time. 
+# Cross lagged paths: No significant CL effects. 
+# Covariances: Negatively correlated at each wave (significant), pregnancy status is associated with lower relationship satisfaction (at the same time), but does not predict longitudinal changes in satisfaction, and vice versa. 
+```
+
+## More complex models: 
+We decided to focus on financial stress, and explore a more complex model that includes social support as a mediator.
 
 ```{r, c1_mdl1}
-#Social support as a mediator between financial stress and relationship satisfaction
+#Social support as a mediator between financial stress and relationship satisfaction. 
+# First, the latent factor (social support) is freely estimated, not constrained to be the same across time. 
+
 model11 <- '
 # latent factor for social support: 
   CW1_SUPPORT =~ CW1_SOCPROV_1 + CW1_SOCPROV_2 + CW1_SOCPROV_3_R
@@ -525,11 +619,11 @@ model11 <- '
   CW2_RELSAT ~ m1*CW1_SUPPORT
   CW3_RELSAT ~ m2*CW2_SUPPORT
 
-  # Direct effects (done in model1?)
+  # Direct effects 
   CW2_RELSAT ~ d1*CW1_FINANCIALMAND
   CW3_RELSAT ~ d2*CW2_FINANCIALMAND 
   
-# Indirect effects (should I test this?)
+# Indirect effects 
   indirect21 := c1 * m1
   indirect32 := c2 * m2
 
@@ -546,10 +640,14 @@ fit11 <- sem(model11, data = wide_dat, missing = "ML", meanstructure = TRUE)
 
 #model indexes
 summary(fit11, standardized = TRUE, fit.measures = TRUE) 
+
+# Good model fit (CFI = 0.938, TLI = 0.913, RMSEA= 0.039, SRMR= 0.04). 
+# AR paths: Strong and significant, stable over time. 
+# CL Effects: Financial -> Support (non-significant); FS -> RS (non-significant); Support -> RS (significant but negative relationship, unexpected). 
+# No evidence of mediation, non significant FS-> Support-> RS. 
 ```
 
-## Compare if constraint the loadings of the latent variables (social support)
-
+## Compare if constrain the loadings of the latent variables (social support): 
 ```{r, c1_mdl1_lc}
 #Social support as a mediator between financial stress and relationship satisfaction
 model11_lc <- '
@@ -595,7 +693,7 @@ fit11_lc <- sem(model11_lc, data = wide_dat, missing = "ML", meanstructure = TRU
 summary(fit11_lc, standardized = TRUE, fit.measures = TRUE) 
 
 #model comparisons
-anova(fit11, fit11_lc) ##not significant, so we can use this constrained model to make sure we are measuring the same latent variable across different time points
+anova(fit11, fit11_lc) ##not significant, so we can use this constrained model to make sure we are measuring the same latent variable across different time points 
 
 #setup layout matrix
 layout_matrix <- rbind(
@@ -626,3 +724,10 @@ plt2 <- semPaths(
   style = "lisrel"
 )
 ```
+
+## Constraining AR 
+
+
+
+
+## Constraining AR + CL 
