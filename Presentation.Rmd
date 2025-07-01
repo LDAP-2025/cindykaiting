@@ -26,15 +26,16 @@ dat_wave1 <- read.spss("UKDA-8658-spss/spss/spss28/covid-19_wave1_survey_cls.sav
 dat_wave2 <- read.spss("UKDA-8658-spss/spss/spss28/covid-19_wave2_survey_cls.sav", to.data.frame = TRUE)
 dat_wave3 <- read.spss("UKDA-8658-spss/spss/spss28/covid-19_wave3_survey_cls.sav", to.data.frame = TRUE)
 ```
-# Introduction:  
 
-The Covid-19 pandemic has changed our interpersonal relationships and the way we connect with each other. With the onset of Covid-19,  much of the world implemented strict social distancing and stay-at-home lockdown orders. This significantly increased the amount of time many couples spent together at home. We were interested in how various stressors exacerbated by the pandemic (financial, housing ratio, and pregnancy) influenced relationship satisfaction over the course of the lockdown. We also wanted to see whether this relationship was mediated by the provision of social support perceived by individuals. This research has important implications for understanding the effects of the pandemic on romantic relationships. 
+# Introduction:
+
+The Covid-19 pandemic has changed our interpersonal relationships and the way we connect with each other. With the onset of Covid-19, much of the world implemented strict social distancing and stay-at-home lockdown orders. This significantly increased the amount of time many couples spent together at home. We were interested in how various stressors exacerbated by the pandemic (financial, housing ratio, and pregnancy) influenced relationship satisfaction over the course of the lockdown. We also wanted to see whether this relationship was mediated by the provision of social support perceived by individuals. This research has important implications for understanding the effects of the pandemic on romantic relationships.
 
 ## Database
 
-**Waves:** 
+**Waves:**
 
-The study uses data collected by the Center for Longitudinal Studies and MRC Unit for Lifelong Health and Ageing. They carried out 3 surveys of the participants of 5 national longitudinal cohort studies which collect insights into the lives of study participants on various factors. 
+The study uses data collected by the Center for Longitudinal Studies and MRC Unit for Lifelong Health and Ageing. They carried out 3 surveys of the participants of 5 national longitudinal cohort studies which collect insights into the lives of study participants on various factors.
 
 Wave 1: May 2020 -- at the height of lockdown restrictions
 
@@ -42,19 +43,19 @@ Wave 2: September/October 2020 -- period between the easing of restrictions
 
 Wave 3: February/March 2021 -- during the third UK lockdown
 
-## Research questions 
-How did stress influence relationship satisfaction in cohabitating couples during the pandemic? 
+## Research questions
 
-H1: Stress (financial, pregnancy status, and household ratio) during the pandemic predicts a decline in relationship satisfaction. 
+How did stress influence relationship satisfaction in cohabitating couples during the pandemic?
 
-H2: Social support mediates the relationship between stress and relationship satisfaction. 
+H1: Stress (financial, pregnancy status, and household ratio) during the pandemic predicts a decline in relationship satisfaction.
 
-H3: Relationship satisfaction predicts separation/ divorce. 
-* We initially wanted to include divorce outcomes but there was no data collected, so we will relate our findings to divorce outcomes reported externally. 
+H2: Social support mediates the relationship between stress and relationship satisfaction.
+
+H3: Relationship satisfaction predicts separation/ divorce. \* We initially wanted to include divorce outcomes but there was no data collected, so we will relate our findings to divorce outcomes reported externally.
 
 # Data cleaning process
 
-First we read the data from the COVID-19 database from the COVID-19 Survey in Five National Longitudinal Cohort Studies. Data cleaning was done based on our research question. We decided to only the Next Steps cohort from the database, because it is the only cohort that has social support data and were older than 25 years old to have a higher chance of sustaining stable marriage before the COVID outbreak. Only participants reporting cohabiting with their partner are included to investigate their changes in relationship satisfaction in marriage when having to live with the partner for a longer time during the lockdown.
+First we read the data from the COVID-19 database from the COVID-19 Survey in Five National Longitudinal Cohort Studies. Data cleaning was done based on our research question. We decided to only examine the Next Steps cohort from the database, because it is the only cohort that has social support data and were older than 25 years old to have a higher chance of sustaining stable marriage before the COVID outbreak. Only participants reporting cohabiting with their partner are included to investigate their changes in relationship satisfaction in marriage when having to live with the partner for a longer time during the lockdown.
 
 **Step 1:** include participant based on the inclusion criteria above.
 
@@ -211,11 +212,11 @@ tab_after
 
 [Protective factor:]{.underline} social support.
 
-[Outcome variable:]{.underline} relationship satisfaction. 
+[Outcome variable:]{.underline} relationship satisfaction.
 
-We chose the stressor variables based on prior research associating these stressors to relationship strain. Furthermore, these were all factors that are highly significant during Covid-19 (ie financial stress increased since many people lost their jobs, pregnancy status due to uncertainty and concerns about healthcare, and household ratio since people were spending more time at home and less personal space would likely cause more relationship conflict). 
+We chose the stressor variables based on prior research associating these stressors to relationship strain. Furthermore, these were all factors that are highly significant during Covid-19 (ie financial stress increased since many people lost their jobs, pregnancy status due to uncertainty and concerns about healthcare, and household ratio since people were spending more time at home and less personal space would likely cause more relationship conflict).
 
-The social support variable was selected, it is a latent factor composed of 3 questions, measuring how perceived support from others. This is based on prior literature highlighting the importance of social support during lockdown. 
+The social support variable was selected, it is a latent factor composed of 3 questions, measuring how perceived support from others. This is based on prior literature highlighting the importance of social support during lockdown.
 
 Example code:
 
@@ -239,7 +240,7 @@ clean_dat <- all_dat %>%
          CW3_FINANCIALMAND, CW3_CURPREG, CW3_PRRATIO, CW3_SOCPROV_1, CW3_SOCPROV_2, CW3_SOCPROV_3, CW3_PATIENT, CW3_RELSAT)
 ```
 
-**Step 3:** changing dataset into wide format for SEM analysis
+**Step 3:** changing dataset into wide format for CLPM analysis
 
 Example code:
 
@@ -319,6 +320,8 @@ long_dat %>%
   summarise(across(where(is.numeric), ~sum(is.na(.)), .names = "{.col}"))
 ```
 
+We looked into the exact numbers and proportions of the missing data in each variables, also across waves. Wave 1 was having more missing data compared to 2 and 3, which might be because of many participants are recruited in the later waves. There are excessively missing data in the people room ratio, which suggested a more cautious interpretation of the results is needed for models including this variable. We did not find other thing that is particularly concerning in these results, so we decided to ignore these missing data and just used the remaining data for following analysis. It would be more informative if we have the demographic information of each participant so that we can explore whether if there are particular reasons that are causing these missing data.
+
 ## Descriptive statistics
 
 ```{r, descrptive}
@@ -342,6 +345,8 @@ long_dat %>%
     )
 ```
 
+The means for each variables are quite stable.
+
 ## Relationship satisfaction across waves
 
 ```{r, relsattrand}
@@ -358,6 +363,8 @@ ggplot(long_dat, aes(x = factor(RELSAT), fill = factor(wave))) +
   labs(x = "Relationship satisfaction", y = "Proportion", fill = "Wave") +
   theme_minimal()
 ```
+
+More people tend to rate higher across each waves. An increased proportion in rating low in wave 2.
 
 ## Individual changes to examine the longitudinal trajectories
 
@@ -429,7 +436,7 @@ wide_dat %>%
   rplot()
 ```
 
-# Fit model (simple): 
+# Fit model (simple):
 
 ```{r, s1_mdl1}
 #Simple CLPM testing the model that there might be a causal relationship between financial stress and later relationship satisfaction. 
@@ -500,7 +507,8 @@ semPaths(fit1,
 
 ```
 
-## Housing ratio and relationship satisfaction 
+## Housing ratio and relationship satisfaction
+
 ```{r, s1_mdl1_1}
 model2 <- '
   # autoregressive paths 
@@ -551,7 +559,8 @@ semPaths(fit2,
 
 ```
 
-## Pregnancy status and relationship satisfaction 
+## Pregnancy status and relationship satisfaction
+
 ```{r, s1_mdl1_2}
 model3 <- '
   # Autoregressive paths
@@ -592,7 +601,8 @@ semPaths(fit3,
 # Covariances: Negatively correlated at each wave (significant), pregnancy status is associated with lower relationship satisfaction (at the same time), but does not predict longitudinal changes in satisfaction, and vice versa. 
 ```
 
-## More complex models: 
+## More complex models:
+
 We decided to focus on financial stress, and explore a more complex model that includes social support as a mediator.
 
 ```{r, c1_mdl1_3}
@@ -647,7 +657,8 @@ summary(fit11, standardized = TRUE, fit.measures = TRUE)
 # No evidence of mediation, non significant FS-> Support-> RS. 
 ```
 
-## Compare if constrain the loadings of the latent variables (social support): 
+## Compare if constrain the loadings of the latent variables (social support):
+
 ```{r, c1_mdl1_lc}
 #Social support as a mediator between financial stress and relationship satisfaction
 model11_lc <- '
@@ -725,8 +736,9 @@ plt2 <- semPaths(
 )
 ```
 
-## Constraining AR: want to do so to test whether the stability of the constructs are consistent over time. 
-```{r, c1_mdl1_lc_4} 
+## Constraining AR: want to do so to test whether the stability of the constructs are consistent over time.
+
+```{r, c1_mdl1_lc_4}
 model11AR <- '
 # latent factor for social support: 
   CW1_SUPPORT =~ l1*CW1_SOCPROV_1 + l2*CW1_SOCPROV_2 + l3*CW1_SOCPROV_3_R
@@ -773,9 +785,10 @@ summary(fit11_AR, standardized = TRUE, fit.measures = TRUE)
 anova(fit11_AR, fit11_lc) 
 
 # The results showed that the AR are not equal over time. There is a significant difference between the constrained AR model and constrained AR, the AR model has a significantly higher chi-square, in SEM chi-square measures badness of fit between between the proposed model and the observed data. THe AR paths are not equal over time, so the stability of the varaibles changes across waves. So we won't constrain the AR paths.... 
-``` 
+```
 
-## Constraining CL: 
+## Constraining CL:
+
 ```{r, c1_mdl1_lc_5}
 model11_CL <- '
 # latent factor for social support: 
@@ -857,5 +870,6 @@ semPaths(
 ) 
 ```
 
-## Conclusion 
-This longitudinal structural equation modeling study explored how financial stress impacts relationship satisfaction across three waves, with social support as a potential mediator. Further exploration on 
+## Conclusion
+
+This longitudinal structural equation modeling study explored how financial stress impacts relationship satisfaction across three waves, with social support as a potential mediator. Further exploration on
