@@ -501,7 +501,7 @@ semPaths(fit1,
 ```
 
 ## Housing ratio and relationship satisfaction 
-```{r, s1_mdl1}
+```{r, s1_mdl1_1}
 model2 <- '
   # autoregressive paths 
   CW2_PRRATIO ~ a1*CW1_PRRATIO
@@ -552,7 +552,7 @@ semPaths(fit2,
 ```
 
 ## Pregnancy status and relationship satisfaction 
-```{r, s1_mdl1}
+```{r, s1_mdl1_2}
 model3 <- '
   # Autoregressive paths
   CW2_CURPREG ~ a1*CW1_CURPREG
@@ -595,7 +595,7 @@ semPaths(fit3,
 ## More complex models: 
 We decided to focus on financial stress, and explore a more complex model that includes social support as a mediator.
 
-```{r, c1_mdl1}
+```{r, c1_mdl1_3}
 #Social support as a mediator between financial stress and relationship satisfaction. 
 # First, the latent factor (social support) is freely estimated, not constrained to be the same across time. 
 
@@ -725,9 +725,137 @@ plt2 <- semPaths(
 )
 ```
 
-## Constraining AR 
+## Constraining AR: want to do so to test whether the stability of the constructs are consistent over time. 
+```{r, c1_mdl1_lc_4} 
+model11AR <- '
+# latent factor for social support: 
+  CW1_SUPPORT =~ l1*CW1_SOCPROV_1 + l2*CW1_SOCPROV_2 + l3*CW1_SOCPROV_3_R
+  CW2_SUPPORT =~ l1*CW2_SOCPROV_1 + l2*CW2_SOCPROV_2 + l3*CW2_SOCPROV_3_R
+  CW3_SUPPORT =~ l1*CW3_SOCPROV_1 + l2*CW3_SOCPROV_2 + l3*CW3_SOCPROV_3_R 
+  
+  # Autoregressive paths
+  CW2_FINANCIALMAND ~ a*CW1_FINANCIALMAND
+  CW3_FINANCIALMAND ~ a*CW2_FINANCIALMAND
+  CW2_SUPPORT ~ s*CW1_SUPPORT
+  CW3_SUPPORT ~ s*CW2_SUPPORT
+  CW2_RELSAT ~ b*CW1_RELSAT
+  CW3_RELSAT ~ b*CW2_RELSAT
 
+  # Cross-lagged mediation paths 
+  CW2_SUPPORT ~ c1*CW1_FINANCIALMAND
+  CW3_SUPPORT ~ c2*CW2_FINANCIALMAND
+  CW2_RELSAT ~ m1*CW1_SUPPORT
+  CW3_RELSAT ~ m2*CW2_SUPPORT
 
+  # Direct effects
+  CW2_RELSAT ~ d1*CW1_FINANCIALMAND
+  CW3_RELSAT ~ d2*CW2_FINANCIALMAND 
+  
+# Indirect effects
+  indirect21 := c1 * m1
+  indirect32 := c2 * m2
 
+  # Covariances 
+  CW1_FINANCIALMAND ~~ CW1_SUPPORT + CW1_RELSAT
+  CW2_FINANCIALMAND ~~ CW2_SUPPORT + CW2_RELSAT
+  CW3_FINANCIALMAND ~~ CW3_SUPPORT + CW3_RELSAT
+  CW1_SUPPORT ~~ CW1_RELSAT
+  CW2_SUPPORT ~~ CW2_RELSAT
+  CW3_SUPPORT ~~ CW3_RELSAT
+' 
+#fit model
+fit11_AR <- sem(model11AR, data = wide_dat, missing = "ML", meanstructure = TRUE) 
 
-## Constraining AR + CL 
+#model indexes
+summary(fit11_AR, standardized = TRUE, fit.measures = TRUE) 
+
+#model comparisons
+anova(fit11_AR, fit11_lc) 
+
+# The results showed that the AR are not equal over time. There is a significant difference between the constrained AR model and constrained AR, the AR model has a significantly higher chi-square, in SEM chi-square measures badness of fit between between the proposed model and the observed data. THe AR paths are not equal over time, so the stability of the varaibles changes across waves. So we won't constrain the AR paths.... 
+``` 
+
+## Constraining CL: 
+```{r, c1_mdl1_lc_5}
+model11_CL <- '
+# latent factor for social support: 
+  CW1_SUPPORT =~ l1*CW1_SOCPROV_1 + l2*CW1_SOCPROV_2 + l3*CW1_SOCPROV_3_R
+  CW2_SUPPORT =~ l1*CW2_SOCPROV_1 + l2*CW2_SOCPROV_2 + l3*CW2_SOCPROV_3_R
+  CW3_SUPPORT =~ l1*CW3_SOCPROV_1 + l2*CW3_SOCPROV_2 + l3*CW3_SOCPROV_3_R 
+  
+  # Autoregressive paths
+  CW2_FINANCIALMAND ~ a1*CW1_FINANCIALMAND
+  CW3_FINANCIALMAND ~ a2*CW2_FINANCIALMAND
+  CW2_SUPPORT ~ s1*CW1_SUPPORT
+  CW3_SUPPORT ~ s2*CW2_SUPPORT
+  CW2_RELSAT ~ b1*CW1_RELSAT
+  CW3_RELSAT ~ b2*CW2_RELSAT
+
+  # Cross-lagged mediation paths 
+  CW2_SUPPORT ~ c*CW1_FINANCIALMAND
+  CW3_SUPPORT ~ c*CW2_FINANCIALMAND
+  CW2_RELSAT ~ m*CW1_SUPPORT
+  CW3_RELSAT ~ m*CW2_SUPPORT
+
+  # Direct effects
+  CW2_RELSAT ~ d1*CW1_FINANCIALMAND
+  CW3_RELSAT ~ d2*CW2_FINANCIALMAND 
+  
+# Indirect effects
+  indirect21 := c * m
+  indirect32 := c * m
+
+  # Covariances 
+  CW1_FINANCIALMAND ~~ CW1_SUPPORT + CW1_RELSAT
+  CW2_FINANCIALMAND ~~ CW2_SUPPORT + CW2_RELSAT
+  CW3_FINANCIALMAND ~~ CW3_SUPPORT + CW3_RELSAT
+  CW1_SUPPORT ~~ CW1_RELSAT
+  CW2_SUPPORT ~~ CW2_RELSAT
+  CW3_SUPPORT ~~ CW3_RELSAT
+' 
+
+#fit model
+fit11_CL <- sem(model11_CL, data = wide_dat, missing = "ML", meanstructure = TRUE) 
+
+#model indexes
+summary(fit11_CL, standardized = TRUE, fit.measures = TRUE) 
+
+# Model comparison: 
+anova(fit11_CL, fit11_lc) 
+
+# Model fit is good. 
+# Model comparison with constrained latent model shows no significant loss of fit, more parsimonious model. 
+# Strong AR. 
+# Social Support → Relationship Satisfaction (significant, but negative, unexpected). 
+# Mediation pathway does not really hold. 
+# Significant covariances at each point, contemporaneous associations? 
+
+#setup layout matrix 
+layout_matrix <- rbind(
+  c(NA, "CW1_FINANCIALMAND", NA, NA, "CW2_FINANCIALMAND", NA, NA, "CW3_FINANCIALMAND", NA),
+  c(NA, "CW1_SUPPORT", NA, NA, "CW2_SUPPORT", NA, NA, "CW3_SUPPORT", NA),
+  c("CW1_SOCPROV_1", "CW1_SOCPROV_2", "CW1_SOCPROV_3_R", "CW2_SOCPROV_1", "CW2_SOCPROV_2", "CW2_SOCPROV_3_R", "CW3_SOCPROV_1", "CW3_SOCPROV_2", "CW3_SOCPROV_3_R"),
+  c(NA, "CW1_RELSAT", NA, NA, "CW2_RELSAT", NA, NA, "CW3_RELSAT", NA)
+)
+
+semPaths(
+  fit11_CL,
+  layout = layout_matrix,
+  whatLabels = "est",
+  edge.label.cex = 0.7,
+  sizeMan = 7,
+  sizeLat = 7,
+  label.cex = 1.2,
+  edge.color = "black",
+  intercepts = FALSE,
+  residuals = FALSE,
+  nCharNodes = 0,
+  mar = c(8, 4, 8, 4),
+  exoCov = FALSE,
+  title = FALSE,
+  style = "lisrel"
+) 
+```
+
+## Conclusion 
+This longitudinal structural equation modeling study explored how financial stress impacts relationship satisfaction across three waves, with social support as a potential mediator. Further exploration on 
