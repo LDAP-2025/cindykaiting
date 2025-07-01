@@ -436,9 +436,10 @@ wide_dat %>%
   rplot()
 ```
 
-# Fit model (simple):
+# Fit model (simple): 
+## Financial stress and relationship satisfaction 
 
-```{r, s1_mdl1}
+```{r, s1_mdl1, warning=FALSE}
 #Simple CLPM testing the model that there might be a causal relationship between financial stress and later relationship satisfaction. 
 
 model1 <- '
@@ -509,7 +510,7 @@ semPaths(fit1,
 
 ## Housing ratio and relationship satisfaction
 
-```{r, s1_mdl1_1}
+```{r, s1_mdl1_1, warning= FALSE}
 model2 <- '
   # autoregressive paths 
   CW2_PRRATIO ~ a1*CW1_PRRATIO
@@ -531,11 +532,9 @@ model2 <- '
 
 fit2 <- sem(model2, data = wide_dat, missing = "ML", meanstructure = TRUE) 
 
-# A lot of missing data, future direction is multiple imputations.. 
+# Missing data warning, future direction is multiple imputations. 
 
-lavInspect(fit2, "coverage") 
-
-library(naniar)
+library(naniar) 
 vis_miss(wide_dat[, c("CW1_PRRATIO", "CW2_PRRATIO", "CW3_PRRATIO",
                       "CW1_RELSAT", "CW2_RELSAT", "CW3_RELSAT")]) 
 
@@ -561,7 +560,7 @@ semPaths(fit2,
 
 ## Pregnancy status and relationship satisfaction
 
-```{r, s1_mdl1_2}
+```{r, s1_mdl1_2, warning= FALSE}
 model3 <- '
   # Autoregressive paths
   CW2_CURPREG ~ a1*CW1_CURPREG
@@ -601,11 +600,10 @@ semPaths(fit3,
 # Covariances: Negatively correlated at each wave (significant), pregnancy status is associated with lower relationship satisfaction (at the same time), but does not predict longitudinal changes in satisfaction, and vice versa. 
 ```
 
-## More complex models:
+# More complex models: 
+We decided to focus on financial stress, and explore more complex models that include social support as a mediator. 
 
-We decided to focus on financial stress, and explore a more complex model that includes social support as a mediator.
-
-```{r, c1_mdl1_3}
+```{r, c1_mdl1_3m, warning= FALSE}
 #Social support as a mediator between financial stress and relationship satisfaction. 
 # First, the latent factor (social support) is freely estimated, not constrained to be the same across time. 
 
@@ -657,7 +655,7 @@ summary(fit11, standardized = TRUE, fit.measures = TRUE)
 # No evidence of mediation, non significant FS-> Support-> RS. 
 ```
 
-## Compare if constrain the loadings of the latent variables (social support):
+## Constraining loadings of the latent variable (social support): 
 
 ```{r, c1_mdl1_lc}
 #Social support as a mediator between financial stress and relationship satisfaction
@@ -736,9 +734,10 @@ plt2 <- semPaths(
 )
 ```
 
-## Constraining AR: want to do so to test whether the stability of the constructs are consistent over time.
+## Constraining autoregressive paths: 
+Want to test whether the stability of the constructs are consistent over time. 
 
-```{r, c1_mdl1_lc_4}
+```{r, c1_mdl1_lc_4, warning= FALSE}
 model11AR <- '
 # latent factor for social support: 
   CW1_SUPPORT =~ l1*CW1_SOCPROV_1 + l2*CW1_SOCPROV_2 + l3*CW1_SOCPROV_3_R
@@ -787,7 +786,7 @@ anova(fit11_AR, fit11_lc)
 # The results showed that the AR are not equal over time. There is a significant difference between the constrained AR model and constrained AR, the AR model has a significantly higher chi-square, in SEM chi-square measures badness of fit between between the proposed model and the observed data. THe AR paths are not equal over time, so the stability of the varaibles changes across waves. So we won't constrain the AR paths.... 
 ```
 
-## Constraining CL:
+## Constraining cross-laggged paths: 
 
 ```{r, c1_mdl1_lc_5}
 model11_CL <- '
@@ -870,6 +869,6 @@ semPaths(
 ) 
 ```
 
-## Conclusion
+# Conclusion
 
-This longitudinal structural equation modeling study explored how financial stress impacts relationship satisfaction across three waves, with social support as a potential mediator. Further exploration on
+This longitudinal structural equation modeling study explored how financial stress impacts relationship satisfaction across three waves, with social support as a potential mediator. Further exploration on other factors and models is needed. 
