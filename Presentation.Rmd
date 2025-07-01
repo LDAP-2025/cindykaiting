@@ -871,4 +871,19 @@ semPaths(
 
 # Conclusion
 
-This longitudinal structural equation modeling study explored how financial stress impacts relationship satisfaction across three waves, with social support as a potential mediator. Further exploration on other factors and models is needed. 
+This longitudinal structural equation modeling study explored how financial stress impacts relationship satisfaction across three waves, with social support as a potential mediator. 
+
+The COVID-19 pandemic influenced relationships; lockdown and restrictions led to significant changes in daily routines, increased stress levels, financial strain, and strained relationships for many couples. There were more divorce applications after the UK's first national lockdown ended. The Office for National Statistics (ONS) showed that 113,505 divorces were finalised in 2021, which is an increase of 9.6 per cent compared to 2020.
+- This could have been due to delay in processing, lockdown. 
+- Marriage Foundation- 20 per cent of married parents said their relationship improved in lockdown compared to 9 per cent who admitted it worsened. 
+
+But many factors are involved: 
+
+“I was more stressed, and it was all just building up, and we decided for maybe a trial separation.” 
+
+Pandemic as “the perfect storm” for couples, with lockdowns and social distancing causing them to spend increased amounts of time together. 
+
+For other couples, the increase in mental health problems linked to the pandemic is playing a role in break-ups.
+
+We have explored only one potential pathway, financial stress-> relationship satisfaction. Further exploration on other factors and models is needed. More exploration into groups that had high VS low relsat at the beginning and whether trajectories are significantly different. More factors as well. 
+
