@@ -842,31 +842,16 @@ anova(fit11_CL, fit11_lc)
 # Mediation pathway does not really hold. 
 # Significant covariances at each point, contemporaneous associations? 
 
-#setup layout matrix 
-layout_matrix <- rbind(
-  c(NA, "CW1_FINANCIALMAND", NA, NA, "CW2_FINANCIALMAND", NA, NA, "CW3_FINANCIALMAND", NA),
-  c(NA, "CW1_SUPPORT", NA, NA, "CW2_SUPPORT", NA, NA, "CW3_SUPPORT", NA),
-  c("CW1_SOCPROV_1", "CW1_SOCPROV_2", "CW1_SOCPROV_3_R", "CW2_SOCPROV_1", "CW2_SOCPROV_2", "CW2_SOCPROV_3_R", "CW3_SOCPROV_1", "CW3_SOCPROV_2", "CW3_SOCPROV_3_R"),
-  c(NA, "CW1_RELSAT", NA, NA, "CW2_RELSAT", NA, NA, "CW3_RELSAT", NA)
-)
-
-semPaths(
-  fit11_CL,
-  layout = layout_matrix,
-  whatLabels = "est",
-  edge.label.cex = 0.7,
-  sizeMan = 7,
-  sizeLat = 7,
-  label.cex = 1.2,
-  edge.color = "black",
-  intercepts = FALSE,
-  residuals = FALSE,
-  nCharNodes = 0,
-  mar = c(8, 4, 8, 4),
-  exoCov = FALSE,
-  title = FALSE,
-  style = "lisrel"
-) 
+semPaths(fit11_CL,
+         what = "std",  
+         layout = "tree2",
+         rotation = 4,
+         reorder = FALSE,
+         color = list(man = "white"),
+         fade= TRUE,
+         residuals = FALSE,   
+         intercepts= FALSE, 
+         title = FALSE) 
 ```
 
 # Conclusion
